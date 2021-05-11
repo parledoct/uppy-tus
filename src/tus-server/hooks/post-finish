@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Convert file to 16-bit PCM wav (codec), mono (ac), at 16 kHz (ar)
+ffmpeg -y -i ${TUS_DATA_DIR}/${TUS_ID} -acodec pcm_s16le -ac 1 -ar 16000 ${TUS_DATA_DIR}/${TUS_ID}.wav
+
+# Copy converted wav file to S3 bucket
+mc cp ${TUS_DATA_DIR}/$TUS_ID.wav ${TUS_DATA_DIR}/$TUS_ID.info minio/tus/
+
+# Delete all files from tus server
+rm ${TUS_DATA_DIR}/${TUS_ID}*

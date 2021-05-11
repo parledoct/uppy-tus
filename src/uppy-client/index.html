@@ -1,0 +1,31 @@
+<head>
+	<title>Uppy client</title>
+	<link href="uppy.min.css" rel="stylesheet">
+</head>
+
+<body style="text-align: center;">
+  <div style="width:750px; margin: auto">
+	 <div id="drag-drop-area"></div>
+  </div>
+
+  <script src="uppy.min.js"></script>
+
+	<script>
+  		var uppy = Uppy.Core({ 
+        autoProceed: false,
+        restrictions: {
+          allowedFileTypes: ['.wav']
+        }
+      })
+
+  		uppy.use(Uppy.Dashboard, { target: '#drag-drop-area', inline: true })
+
+      uppy.use(Uppy.Tus, { 
+        endpoint: 'http://localhost:1080/files/',
+        resume: true,
+        retryDelays: [0, 1000, 3000, 5000]
+      })
+
+  	</script>
+
+</body>

@@ -1,0 +1,50 @@
+version: '3.5'
+
+services:
+  apache:
+    image: 'bitnami/apache:latest'
+    volumes:
+      # Mount uppy-client to /app so that index.html
+      # appears as /app/index.html in container
+      # which can be accessed on http://localhost:8080/
+      - ${PWD}/src/uppy-client:/app
+    ports:
+      - '8080:8080'
+
+  minio:
+    container_name: minio-s3-storage
+    image: "minio/minio"
+    env_file:
+      - docker-compose.env
+    ports:
+      - "9000:9000"
+    # Create 'tus' folder inside /data and launch Minio S3 server at /data
+    # which will show 'tus' as an S3 bucket
+    entrypoint: sh
+    command: -c 'mkdir -p /data/tus && /usr/bin/minio server /data'
+    networks:
+      - network
+
+  tus:
+    build: ./src/tus-server
+    ports:
+      - "1080:1080"
+    entrypoint: sh
+    env_file:
+      - docker-compose.env
+    # Setup minio endpoint then launch tusd, with file hooks option by setting --hooks-dir path
+    command: -c './minio-setup.sh && tusd -upload-dir /srv/data --hooks-dir /hooks'
+    # The services 'tus' and 'minio' being on the same network means
+    # endpoint 'http://minio:9000' resolves to the minio service
+    networks:
+      - network
+    # Make sure minio is ready before launching tus (else minio-setup.sh will fail)
+    depends_on:
+      - "minio"
+    # Uncomment if you want to mount the hooks directory into the tus container
+    # to experiment with different hooks
+    # volumes:
+    #   - ${PWD}/src/tus-server/hooks:/hooks
+
+networks:
+    network: {}
